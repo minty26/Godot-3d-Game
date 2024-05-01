@@ -16,6 +16,8 @@ var lerp_speed = 10.0
 
 var direction = Vector3.ZERO
 
+var crouching_depth = -0.5
+
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -30,10 +32,15 @@ func _input(event):
 
 func _physics_process(delta):
 	
-	if Input.is_action_pressed("sprint"):
-		current_speed = sprinting_speed
+	if Input.is_action_pressed("crouch"):
+		current_speed = crouching_speed
+		head.position.y = lerp(head.position.y,1.8 + crouching_depth,delta*lerp_speed)
 	else:
-		current_speed = walking_speed
+		head.position.y = lerp(head.position.y,1.8,delta*lerp_speed)
+		if Input.is_action_pressed("sprint"):
+			current_speed = sprinting_speed
+		else:
+			current_speed = walking_speed
 	
 	# Add the gravity.
 	if not is_on_floor():
