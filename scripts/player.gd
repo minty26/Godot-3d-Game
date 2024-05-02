@@ -37,6 +37,8 @@ func _input(event):
 			head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
 			head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
 
+var is_crouching = false
+
 func crouchEaseIn():
 	pass
 	
@@ -47,15 +49,18 @@ func setCrouch(yes):
 	if yes:
 		crouchEaseIn()		
 		player.global_scale(Vector3(1,0.5,1))
+		is_crouching = true
 	else:
 		crouchEaseOut()		
 		player.global_scale(Vector3(1,2,1))		
+		is_crouching = false		
 
 
 func _physics_process(delta):
 	if Input.is_action_just_pressed("crouch"):
-		setCrouch(true)
-		intendingToStand = false
+		if not is_crouching:
+			setCrouch(true)
+			intendingToStand = false
 		
 	if Input.is_action_just_released("crouch"):
 		print(raycast.get_collider())
