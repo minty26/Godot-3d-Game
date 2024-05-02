@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cxa6mdv50xl2h"]
+[gd_scene load_steps=9 format=3 uid="uid://cxa6mdv50xl2h"]
 
 [ext_resource type="Texture2D" uid="uid://du3e6pe88xtql" path="res://assets/tex-black.png" id="1_ds1ry"]
 [ext_resource type="Texture2D" uid="uid://cfevck8cmagnr" path="res://assets/hdr_sky.hdr" id="2_i3eur"]
@@ -22,11 +22,10 @@ glow_enabled = true
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_eswk3"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ilx44"]
-radius = 0.0005
-height = 1.2
-
 [node name="world" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-0.999994, -1.16415e-10, 0.00350809, 0.00162789, 0.885815, 0.464035, -0.00310752, 0.464038, -0.88581, 0, 3.4718, -6.01433)
 
 [node name="stage" type="Node3D" parent="."]
 
@@ -52,16 +51,20 @@ transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75
 shadow_enabled = true
 
 [node name="player" type="CharacterBody3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.546681, 0)
 script = ExtResource("3_ao76s")
+
+[node name="RayCast3D" type="RayCast3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 1, 0)
+target_position = Vector3(0, 2, 0)
+
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01961, 0)
 
 [node name="standing_collision_shape" type="CollisionShape3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_eswk3")
-
-[node name="crouching_collision_shape" type="CollisionShape3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.299575, 0)
-shape = SubResource("CapsuleShape3D_ilx44")
-disabled = true
 
 [node name="head" type="Node3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
