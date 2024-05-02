@@ -24,6 +24,10 @@ var crouching_depth = -0.5
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
+var crouching = false
+var intendingToStand = false
+
+
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	
@@ -33,21 +37,41 @@ func _input(event):
 			head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
 			head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
 
+func crouchEaseIn():
+	pass
+	
+func crouchEaseOut():
+	pass
+
+func setCrouch(yes):
+	if yes:
+		crouchEaseIn()		
+		player.global_scale(Vector3(1,0.5,1))
+	else:
+		crouchEaseOut()		
+		player.global_scale(Vector3(1,2,1))		
 
 
 func _physics_process(delta):
-	var just_pressed_crouch = false
-	
-	if Input.is_action_just_pressed("crouch") and not just_pressed_crouch:
-		player.global_scale(Vector3(1,0.5,1))		
-		just_pressed_crouch = true
+	if Input.is_action_just_pressed("crouch"):
+		setCrouch(true)
+		intendingToStand = false
 		
 	if Input.is_action_just_released("crouch"):
 		print(raycast.get_collider())
 		if not raycast.is_colliding():
-			player.global_scale(Vector3(1,2,1))		
-			just_pressed_crouch = false
-	
+			setCrouch(false)
+		else:
+			intendingToStand = true
+			
+	if not raycast.is_colliding() and intendingToStand:
+		setCrouch(false)
+		intendingToStand = false
+					
+	#if raycast.is_colliding():
+	#	current_speed = crouching_speed
+	#else:
+	#	current_speed = walking_speed
 	
 	if Input.is_action_pressed("crouch"):
 		current_speed = crouching_speed
