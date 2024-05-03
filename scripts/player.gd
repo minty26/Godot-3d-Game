@@ -33,27 +33,29 @@ func _ready():
 	
 func _input(event):
 	if event is InputEventMouseMotion:
-			rotate_y(deg_to_rad(-event.relative.x * mouse_sense))
-			head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
-			head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
+		rotate_y(deg_to_rad(-event.relative.x * mouse_sense))
+		head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
+		head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
 
 var is_crouching = false
-
-func crouchEaseIn():
-	pass
-	
-func crouchEaseOut():
-	pass
+var in_the_process_of_crouching = false
+var in_the_process_of_uncrouching = false
+var t = 0.0
+var current_scale : Vector3
 
 func setCrouch(yes):
 	if yes:
-		crouchEaseIn()		
-		player.global_scale(Vector3(1,0.5,1))
+		t = 0.0
+		in_the_process_of_crouching = true		
+		in_the_process_of_uncrouching = false		
 		is_crouching = true
+		current_scale = player.get_scale()
 	else:
-		crouchEaseOut()		
-		player.global_scale(Vector3(1,2,1))		
+		t = 0.0	
+		in_the_process_of_crouching = false
+		in_the_process_of_uncrouching = true				
 		is_crouching = false		
+		current_scale = player.get_scale()		
 
 
 func _physics_process(delta):
@@ -72,7 +74,26 @@ func _physics_process(delta):
 	if not raycast.is_colliding() and intendingToStand:
 		setCrouch(false)
 		intendingToStand = false
-					
+	
+	
+	#do the crouch
+	
+	# tweakable
+	var local_crouch_speed = 4.0
+	
+	if in_the_process_of_crouching:
+		t += local_crouch_speed * delta
+		player.set_scale(Vector3(1.0,lerp(current_scale.y,0.5,t),1.0))
+	if t >= 1.0:
+		in_the_process_of_crouching = false
+		
+	if in_the_process_of_uncrouching:
+		t += local_crouch_speed * delta
+		player.set_scale(Vector3(1.0,lerp(current_scale.y,1.0,t),1.0))
+	if t >= 1.0:
+		in_the_process_of_uncrouching = false
+	
+		
 	#if raycast.is_colliding():
 	#	current_speed = crouching_speed
 	#else:
