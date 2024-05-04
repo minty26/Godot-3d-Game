@@ -16,18 +16,25 @@ var current_speed = 5.0
 const walking_speed = 5.0
 const sprinting_speed = 8.0
 const crouching_speed = 2.8
+const crouching_height = 0.7
+const fall_height = 0.8
+
+# weird bug where the player falls even though hes on the floor then does the fall animation on startup
+# just fixed it with this brah what can i say...
+var first_fall = true
+
+const slide_factor = 0.1
+var cached_speed: Vector3
 
 const jump_velocity = 4.5
+var just_hit_floor = false
 
 const mouse_sense = 0.3
-
-const crouching_height = 0.7
-
 var lerp_speed = 10.0
-
 var direction = Vector3.ZERO
+const turn_weight = 0.5
 
-var crouching_depth = -0.5
+
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -38,6 +45,7 @@ var intendingToStand = false
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	
+	
 func _input(event):
 	if event is InputEventMouseMotion:
 		rotate_y(deg_to_rad(-event.relative.x * mouse_sense))	
@@ -47,6 +55,8 @@ func _input(event):
 var is_crouching = false
 var in_the_process_of_crouching = false
 var in_the_process_of_uncrouching = false
+var in_the_process_of_fall_recovering = false
+var tf = 0.0
 var t = 0.0
 var current_scale : Vector3
 var crouch_in_air_count = 0
@@ -65,8 +75,13 @@ func setCrouch(yes):
 		is_crouching = false		
 		current_scale = player.get_scale()		
 
+func setFallRecovery():
+	tf = 0.0
+	in_the_process_of_fall_recovering = true
+	current_scale = player.get_scale()
+
 func _physics_process(delta):
-	
+	print(velocity)
 	if Input.is_action_just_pressed("perspective"):
 		cameraCycle[cameraActive].current = false
 		if cameraActive+1 > len(cameraCycle)-1:
@@ -97,6 +112,14 @@ func _physics_process(delta):
 	
 	# tweakable
 	var local_crouch_speed = 0.1 / delta
+	var local_fall_recovery_speed = 0.1 / delta
+
+	if in_the_process_of_fall_recovering:
+		tf += local_fall_recovery_speed * delta
+		player.set_scale(Vector3(1.0,lerp(current_scale.y, fall_height, tf),1.0))		
+		if tf >= 1.0:
+			in_the_process_of_fall_recovering = false
+			just_hit_floor = false
 
 	# pressing control and going into crouch
 	if in_the_process_of_crouching:
@@ -118,7 +141,7 @@ func _physics_process(delta):
 			crouch_in_air_count += 1
 	
 	# released control, and going into a standing position
-	elif in_the_process_of_uncrouching:
+	elif in_the_process_of_uncrouching and not in_the_process_of_fall_recovering:
 		if raycast.is_colliding():
 			setCrouch(true)		
 		# start 'animation'
@@ -160,20 +183,38 @@ func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
+
 	# Handle jump.
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
-	var input_dir = Input.get_vector("left", "right", "forward", "backward")
+	var input_dir = Input.get_vector("left", "right", "forward", "backward")	
 	direction = lerp(direction,(transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized(),delta*lerp_speed)
 	
-	if direction:
-		velocity.x = direction.x * current_speed
-		velocity.z = direction.z * current_speed
-	else:
-		velocity.x = move_toward(velocity.x, 0, current_speed)
-		velocity.z = move_toward(velocity.z, 0, current_speed)
+	
+	if is_on_floor():
+		if not just_hit_floor and abs(cached_speed.y) > 0:
+			if not first_fall:
+				setFallRecovery()			
+				just_hit_floor = true
+			if first_fall:
+				first_fall = false
+		
+		if input_dir:
+			velocity.x = direction.x * current_speed
+			velocity.z = direction.z * current_speed		
+			cached_speed = velocity
+		if not input_dir:
+			velocity.x = 0.9 * cached_speed.x
+			velocity.z = 0.9 * cached_speed.z
+			cached_speed = velocity
 
+	else:
+		cached_speed = velocity
+	
+	
+	
+		
 	move_and_slide()
