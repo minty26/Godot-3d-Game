@@ -1,0 +1,54 @@
+[gd_scene load_steps=8 format=3 uid="uid://cxa6mdv50xl2h"]
+
+[ext_resource type="Texture2D" uid="uid://du3e6pe88xtql" path="res://assets/tex-black.png" id="1_ds1ry"]
+[ext_resource type="Texture2D" uid="uid://cfevck8cmagnr" path="res://assets/hdr_sky.hdr" id="2_i3eur"]
+[ext_resource type="PackedScene" uid="uid://dmjc3fgwp5qka" path="res://scenes/player.tscn" id="3_qf3lh"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ntuof"]
+albedo_texture = ExtResource("1_ds1ry")
+uv1_triplanar = true
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_548ln"]
+panorama = ExtResource("2_i3eur")
+
+[sub_resource type="Sky" id="Sky_3kh37"]
+sky_material = SubResource("PanoramaSkyMaterial_548ln")
+
+[sub_resource type="Environment" id="Environment_f4ggu"]
+background_mode = 2
+sky = SubResource("Sky_3kh37")
+tonemap_mode = 2
+ssr_fade_out = 1.8025
+glow_enabled = true
+
+[node name="world" type="Node3D"]
+
+[node name="stage" type="Node3D" parent="."]
+
+[node name="Platform" type="CSGBox3D" parent="stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+use_collision = true
+size = Vector3(20, 1, 20)
+material = SubResource("StandardMaterial3D_ntuof")
+
+[node name="Platform_higher" type="CSGBox3D" parent="stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.2719, 2.34936, 0)
+use_collision = true
+size = Vector3(20, 1, 20)
+material = SubResource("StandardMaterial3D_ntuof")
+
+[node name="env" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="env"]
+environment = SubResource("Environment_f4ggu")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="env"]
+transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+shadow_enabled = true
+
+[node name="player" parent="." instance=ExtResource("3_qf3lh")]
+unique_name_in_owner = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-4.37114e-08, -0.461749, 0.887011, 0, 0.887011, 0.461749, -1, 2.01837e-08, -3.87725e-08, 6.87011, 3.4718, -0.0692646)
+current = true

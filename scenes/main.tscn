@@ -18,6 +18,7 @@ sky_material = SubResource("PanoramaSkyMaterial_548ln")
 background_mode = 2
 sky = SubResource("Sky_3kh37")
 tonemap_mode = 2
+ssr_fade_out = 1.8025
 glow_enabled = true
 
 [node name="world" type="Node3D"]

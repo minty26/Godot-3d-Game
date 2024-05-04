@@ -34,23 +34,47 @@ var lerp_speed = 10.0
 var direction = Vector3.ZERO
 const turn_weight = 0.5
 
-
-
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 var crouching = false
 var intendingToStand = false
 
+enum {
+	CAPTURED,
+	VISIBLE
+}
+
+var mouseMode
+
 func _ready():
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	mouseMode = CAPTURED
+	
+func _process(delta):
+	pass
 	
 	
 func _input(event):
+	
+	
+	if Input.is_action_just_pressed("mouse_escape"):
+		if mouseMode == CAPTURED:
+			mouseMode = VISIBLE
+		else:
+			mouseMode = CAPTURED
+		
+	if mouseMode == CAPTURED:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	elif mouseMode == VISIBLE:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
 	if event is InputEventMouseMotion:
 		rotate_y(deg_to_rad(-event.relative.x * mouse_sense))	
 		head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
-		head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
+		if cameraCycle[cameraActive] == camera1 or cameraCycle[cameraActive] == camera3_2:
+			head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
+		elif cameraCycle[cameraActive] == camera3:
+			head.rotation.x = clamp(head.rotation.x,deg_to_rad(-60),deg_to_rad(120))
 		
 var is_crouching = false
 var in_the_process_of_crouching = false
