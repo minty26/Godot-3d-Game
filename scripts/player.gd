@@ -4,7 +4,12 @@ extends CharacterBody3D
 @onready var standing_collision_shape = $standing_collision_shape
 @onready var raycast = $RayCast3D
 @onready var player = %player
-@onready var camera = $head/Camera3D
+@onready var camera1 = $"head/eyes/1stPerson"
+@onready var camera3 = $"head/3rdPerson"
+@onready var camera3_2 = $"head/3rdPerson2"
+@onready var cameraCycle = [camera1, camera3, camera3_2]
+
+var cameraActive = -1
 
 var current_speed = 5.0
 
@@ -35,17 +40,16 @@ func _ready():
 	
 func _input(event):
 	if event is InputEventMouseMotion:
-		rotate_y(deg_to_rad(-event.relative.x * mouse_sense))
+		rotate_y(deg_to_rad(-event.relative.x * mouse_sense))	
 		head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
 		head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
-
+		
 var is_crouching = false
 var in_the_process_of_crouching = false
 var in_the_process_of_uncrouching = false
 var t = 0.0
 var current_scale : Vector3
 var crouch_in_air_count = 0
-
 
 func setCrouch(yes):
 	if yes:
@@ -61,8 +65,16 @@ func setCrouch(yes):
 		is_crouching = false		
 		current_scale = player.get_scale()		
 
-
 func _physics_process(delta):
+	
+	if Input.is_action_just_pressed("perspective"):
+		cameraCycle[cameraActive].current = false
+		if cameraActive+1 > len(cameraCycle)-1:
+			cameraActive = 0
+		else:
+			cameraActive += 1
+		cameraCycle[cameraActive].current = true
+	
 	if Input.is_action_just_pressed("crouch"):
 		if not is_crouching:
 			setCrouch(true)
@@ -107,18 +119,17 @@ func _physics_process(delta):
 	
 	# released control, and going into a standing position
 	elif in_the_process_of_uncrouching:
+		if raycast.is_colliding():
+			setCrouch(true)		
 		# start 'animation'
 		t += local_crouch_speed * delta
 		if is_on_floor():
 			# resizes you back up after landing, or just resizes you normally
 			player.set_scale(Vector3(1.0,lerp(current_scale.y,1.0,t),1.0))
-			#player.transform.origin.y -= (current_scale.y - (crouching_height * current_scale.y))/2
-		else:
-			pass
-			#crouch_in_air_count += 1						
 		if t >= 1.0:
 			# since 'animation' is complete, you're no longer uncrouching; hence just standing
 			in_the_process_of_uncrouching = false
+	
 	
 	# if you're not holding crouch, and you're on the ground, resest air crouch counter, and uncrouch
 	if not Input.is_action_pressed("crouch") and is_on_floor():

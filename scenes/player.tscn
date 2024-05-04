@@ -22,12 +22,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_eswk3")
 
 [node name="head" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="CSGSphere3D" type="CSGSphere3D" parent="head"]
+
+[node name="3rdPerson" type="Camera3D" parent="head"]
+transform = Transform3D(1, 0, 0, 0, 0.907777, 0.419452, 0, -0.419452, 0.907777, 0, 1.4, 2.412)
+
+[node name="3rdPerson2" type="Camera3D" parent="head"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, -3.275)
 
 [node name="eyes" type="Node3D" parent="head"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.429214)
 
-[node name="Camera3D" type="Camera3D" parent="head/eyes"]
+[node name="1stPerson" type="Camera3D" parent="head/eyes"]
 current = true
 
 [node name="CSGSphere3D" type="CSGSphere3D" parent="head/eyes"]
