@@ -30,7 +30,7 @@ glow_enabled = true
 [node name="stage" type="Node3D" parent="."]
 
 [node name="Platform" type="CSGBox3D" parent="stage"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.169862, -0.410736, -0.272945)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 use_collision = true
 size = Vector3(20, 1, 20)
 material = SubResource("StandardMaterial3D_ntuof")
@@ -42,7 +42,7 @@ size = Vector3(20, 1, 20)
 material = SubResource("StandardMaterial3D_ntuof")
 
 [node name="CSGBox3D" type="CSGBox3D" parent="stage"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.07795, 3.71599, 7.02277)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.95535, 3.61986, 6.812)
 use_collision = true
 size = Vector3(10, 6, 1)
 material = SubResource("StandardMaterial3D_0425u")
@@ -59,12 +59,5 @@ shadow_enabled = true
 [node name="player" parent="." instance=ExtResource("3_qf3lh")]
 unique_name_in_owner = true
 
-[node name="OutsideHolder" type="Node3D" parent="."]
-transform = Transform3D(0.991317, 0, 0.131495, 0, 1, 0, -0.131495, 0, 0.991317, 10, 6.5, 0)
-
-[node name="OutsideHead" type="Node3D" parent="OutsideHolder"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-
-[node name="Outside" type="Camera3D" parent="OutsideHolder/OutsideHead"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-current = true
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-4.37114e-08, -0.461749, 0.887011, 0, 0.887011, 0.461749, -1, 2.01837e-08, -3.87725e-08, 6.87011, 3.4718, -0.0692646)

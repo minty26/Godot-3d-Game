@@ -7,8 +7,10 @@ extends CharacterBody3D
 @onready var camera1 = $"head/eyes/1stPerson"
 @onready var camera3 = $"head/3rdPerson"
 @onready var camera3_2 = $"head/3rdPerson2"
-@onready var cameraCycle = [camera1, camera3, camera3_2]
-
+@onready var outsideCamera = $"../OutsideHolder/OutsideHead/Outside"
+@onready var outsideHead = $"../OutsideHolder/OutsideHead"
+@onready var outsideHolder = $"../OutsideHolder"
+@onready var cameraCycle = [camera1, camera3, camera3_2, outsideCamera]
 var cameraActive = -1
 
 var current_speed = 5.0
@@ -49,13 +51,9 @@ var mouseMode
 
 func _ready():
 	mouseMode = CAPTURED
-	
-func _process(delta):
-	pass
-	
+		
 	
 func _input(event):
-	
 	
 	if Input.is_action_just_pressed("mouse_escape"):
 		if mouseMode == CAPTURED:
@@ -69,21 +67,35 @@ func _input(event):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
 	if event is InputEventMouseMotion:
-		rotate_y(deg_to_rad(-event.relative.x * mouse_sense))	
-		head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
-		if cameraCycle[cameraActive] == camera1 or cameraCycle[cameraActive] == camera3_2:
+		#print(cameraCycle[cameraActive] 	
+		if not Input.is_action_pressed("right_click"):
+			rotate_y(deg_to_rad(-event.relative.x * mouse_sense))	
+			head.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
+		else:
+			outsideHolder.rotate_y(deg_to_rad(-event.relative.x * mouse_sense))
+			outsideHead.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
+		if cameraCycle[cameraActive] == camera1 or cameraCycle[cameraActive] == camera3_2 or outsideCamera:
 			head.rotation.x = clamp(head.rotation.x,deg_to_rad(-89),deg_to_rad(89))
 		elif cameraCycle[cameraActive] == camera3:
 			head.rotation.x = clamp(head.rotation.x,deg_to_rad(-60),deg_to_rad(120))
+		#elif cameraCycle[cameraActive] == outsideCamera:
+		#	if Input.is_action_pressed("right_click"):
+		#		outsideCamera.rotate_y(deg_to_rad(-event.relative.x * mouse_sense))	
+		#		outsideCameraHead.rotate_x(deg_to_rad(-event.relative.y * mouse_sense))
 		
 var is_crouching = false
 var in_the_process_of_crouching = false
 var in_the_process_of_uncrouching = false
 var in_the_process_of_fall_recovering = false
+var in_the_process_of_wallrunning = false
 var tf = 0.0
 var t = 0.0
+var tw = 0.0
 var current_scale : Vector3
 var crouch_in_air_count = 0
+
+var started_wallrunning = false
+
 
 func setCrouch(yes):
 	if yes:
@@ -104,8 +116,11 @@ func setFallRecovery():
 	in_the_process_of_fall_recovering = true
 	current_scale = player.get_scale()
 
+func setWallRun():
+	tw = 0.0
+	in_the_process_of_wallrunning = true
+
 func _physics_process(delta):
-	print(velocity)
 	if Input.is_action_just_pressed("perspective"):
 		cameraCycle[cameraActive].current = false
 		if cameraActive+1 > len(cameraCycle)-1:
@@ -137,6 +152,13 @@ func _physics_process(delta):
 	# tweakable
 	var local_crouch_speed = 0.1 / delta
 	var local_fall_recovery_speed = 0.1 / delta
+	var local_wallrun_rotation_speed = 0.1 / delta
+
+	if in_the_process_of_wallrunning:
+		tw += local_wallrun_rotation_speed * delta
+		#player.rotation = Vector3(0.0,0.0,deg_to_rad(lerp(player.rotation.z,12.0,tw)))
+		if tw >= 1.0:
+			in_the_process_of_wallrunning = false
 
 	if in_the_process_of_fall_recovering:
 		tf += local_fall_recovery_speed * delta
@@ -207,7 +229,7 @@ func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
-
+	
 	# Handle jump.
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
@@ -236,9 +258,17 @@ func _physics_process(delta):
 			cached_speed = velocity
 
 	else:
+		
+		###### modulate velocity instead of directly affecting it ######
+		if input_dir:
+			velocity.x = direction.x * current_speed
+			velocity.z = direction.z * current_speed
 		cached_speed = velocity
 	
-	
+	if is_on_wall():
+		setWallRun()
+		
+		
 	
 		
 	move_and_slide()
