@@ -4,6 +4,7 @@ extends CharacterBody3D
 @onready var standing_collision_shape = $standing_collision_shape
 @onready var raycast = $RayCast3D
 @onready var player = %player
+@onready var camera = $head/Camera3D
 
 var current_speed = 5.0
 
@@ -14,6 +15,8 @@ const crouching_speed = 2.8
 const jump_velocity = 4.5
 
 const mouse_sense = 0.3
+
+const crouching_height = 0.7
 
 var lerp_speed = 10.0
 
@@ -26,7 +29,6 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 var crouching = false
 var intendingToStand = false
-
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -42,6 +44,8 @@ var in_the_process_of_crouching = false
 var in_the_process_of_uncrouching = false
 var t = 0.0
 var current_scale : Vector3
+var crouch_in_air_count = 0
+
 
 func setCrouch(yes):
 	if yes:
@@ -68,6 +72,7 @@ func _physics_process(delta):
 		print(raycast.get_collider())
 		if not raycast.is_colliding():
 			setCrouch(false)
+			crouch_in_air_count += 1						
 		else:
 			intendingToStand = true
 			
@@ -79,20 +84,50 @@ func _physics_process(delta):
 	#do the crouch
 	
 	# tweakable
-	var local_crouch_speed = 4.0
-	
+	var local_crouch_speed = 0.1 / delta
+
+	# pressing control and going into crouch
 	if in_the_process_of_crouching:
+		# progress the 'animation'
 		t += local_crouch_speed * delta
-		player.set_scale(Vector3(1.0,lerp(current_scale.y,0.5,t),1.0))
-	if t >= 1.0:
-		in_the_process_of_crouching = false
-		
-	if in_the_process_of_uncrouching:
-		t += local_crouch_speed * delta
-		player.set_scale(Vector3(1.0,lerp(current_scale.y,1.0,t),1.0))
-	if t >= 1.0:
-		in_the_process_of_uncrouching = false
+		# only go into crouch with camera movement if on the ground
+		if is_on_floor():
+			player.set_scale(Vector3(1.0,lerp(current_scale.y,crouching_height,t),1.0))
+		# if not on the ground, do it a bit differently
+		if not is_on_floor():
+			# once youve crouched mid air, you stay crouching
+			if crouch_in_air_count < 1:
+				# resizes you over time but also moves you up at the same rate; crouching you up
+				player.set_scale(Vector3(1.0,lerp(current_scale.y,crouching_height,t),1.0))
+				player.transform.origin.y += (current_scale.y - (crouching_height * current_scale.y))/4
+		if t >= 1.0:
+			# once 'animation' complete, disabled ability to uncrouch
+			in_the_process_of_crouching = false
+			crouch_in_air_count += 1
 	
+	# released control, and going into a standing position
+	elif in_the_process_of_uncrouching:
+		# start 'animation'
+		t += local_crouch_speed * delta
+		if is_on_floor():
+			# resizes you back up after landing, or just resizes you normally
+			player.set_scale(Vector3(1.0,lerp(current_scale.y,1.0,t),1.0))
+			#player.transform.origin.y -= (current_scale.y - (crouching_height * current_scale.y))/2
+		else:
+			pass
+			#crouch_in_air_count += 1						
+		if t >= 1.0:
+			# since 'animation' is complete, you're no longer uncrouching; hence just standing
+			in_the_process_of_uncrouching = false
+	
+	# if you're not holding crouch, and you're on the ground, resest air crouch counter, and uncrouch
+	if not Input.is_action_pressed("crouch") and is_on_floor():
+		crouch_in_air_count = 0
+		if not raycast.is_colliding():
+			setCrouch(false)
+		else:
+			intendingToStand = true	
+		
 		
 	#if raycast.is_colliding():
 	#	current_speed = crouching_speed
@@ -115,7 +150,7 @@ func _physics_process(delta):
 		velocity.y -= gravity * delta
 
 	# Handle jump.
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
+	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
 
 	# Get the input direction and handle the movement/deceleration.
