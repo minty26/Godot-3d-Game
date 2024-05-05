@@ -1,5 +1,9 @@
 extends CharacterBody3D
 
+// Tomek is class. Cheers for the work mate
+// If I ever use this script in a game, this is a reminder to put tomek in the credits :)
+
+
 @onready var head = $head
 @onready var standing_collision_shape = $standing_collision_shape
 @onready var raycast = $RayCast3D
